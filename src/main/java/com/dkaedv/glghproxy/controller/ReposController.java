@@ -226,12 +226,14 @@ public class ReposController {
 			) throws IOException {
 
 		GitlabAPI api = gitlab.connect(authorization);
-		GitlabProjectHook createdHook = api.addProjectHook(
-				namespace + "/" + repo,
-				hook.getConfig().get("url"), 
-				hook.getEvents().contains("push"), 
-				false,
-				hook.getEvents().contains("pull_request"));
+
+		GitlabProject project = api.getProject(namespace + "/" + repo);
+
+		GitlabProjectHook createdHook = api.addProjectHook(project, hook.getConfig().get("url"));
+
+		createdHook.setIssueEvents(false);
+		createdHook.setPushEvents(hook.getEvents().contains("push"));
+		createdHook.setMergeRequestsEvents(hook.getEvents().contains("pull_request"));
 		
 		return GitlabToGithubConverter.convertHook(createdHook);
 	}
